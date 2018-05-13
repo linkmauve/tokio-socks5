@@ -85,8 +85,8 @@ fn main() {
     // external servers can't be used in your environment, you can substitue
     // your own.
     let dns = "8.8.8.8:53".parse().unwrap();
-    let (stream, sender) = UdpClientStream::new(dns, handle.clone());
-    let client = ClientFuture::new(stream, sender, handle.clone(), None);
+    let (stream, sender) = UdpClientStream::new(dns, &handle);
+    let client = ClientFuture::new(stream, sender, &handle, None);
 
     // Construct a future representing our server. This future processes all
     // incoming connections and spawns a new task for each client which will do
@@ -647,11 +647,11 @@ fn name_port(addr_buf: &[u8]) -> io::Result<UrlHost> {
 
 // Extracts the first IP address from the response.
 fn get_addr(response: Message, port: u16) -> io::Result<SocketAddr> {
-    if response.get_response_code() != ResponseCode::NoError {
+    if response.response_code() != ResponseCode::NoError {
         return Err(other("resolution failed"));
     }
-    let addr = response.get_answers().iter().filter_map(|ans| {
-        match *ans.get_rdata() {
+    let addr = response.answers().iter().filter_map(|ans| {
+        match *ans.rdata() {
             RData::A(addr) => Some(IpAddr::V4(addr)),
             RData::AAAA(addr) => Some(IpAddr::V6(addr)),
             _ => None,
